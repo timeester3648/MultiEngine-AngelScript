@@ -11,7 +11,15 @@ project "AngelScript"
 	files {
 		"./sdk/angelscript/include/**.h",
 		"./sdk/angelscript/source/**.h",
-		"./sdk/angelscript/source/**.cpp"
+		"./sdk/angelscript/source/**.cpp",
+
+		"./sdk/add_on/**.h",
+		"./sdk/add_on/**.cpp"
+	}
+
+	excludes {
+		"./sdk/add_on/autowrapper/**.h",
+		"./sdk/add_on/autowrapper/**.cpp"
 	}
 
 	defines {
@@ -40,4 +48,4 @@ project "AngelScript"
 		buildoutputs { "%{cfg.objdir}/%{file.basename}.obj" }
 	
 	filter "system:windows"
-		disablewarnings { "4468" }
+		disablewarnings { "4468", "4244", "4996" }
