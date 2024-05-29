@@ -30,9 +30,6 @@ project "AngelScript"
 		"%{IncludeDir.angel_script}"
 	}
 
-	filter "configurations:Debug"
-		defines { "AS_DEBUG" }
-
 	filter "toolset:msc"
 		files {
 			"./sdk/angelscript/source/as_callfunc_x64_msvc_asm.asm"
