@@ -2,7 +2,7 @@ void main(MultiBuild::Workspace& workspace) {
 	auto project = workspace.create_project(".");
 	auto properties = project.properties();
 
-	properties.name("AngelScript");
+	project.name("AngelScript");
 	properties.binary_object_kind(MultiBuild::BinaryObjectKind::eStaticLib);
 	properties.defines("ANGELSCRIPT_EXPORT");
 
@@ -41,6 +41,6 @@ void main(MultiBuild::Workspace& workspace) {
 
 		properties.build_outputs({
 			"{:project.obj_dir}/{:file.stem}.obj"
-		})
+		});
 	}
 }
