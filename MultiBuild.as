@@ -13,8 +13,12 @@ void main(MultiBuild::Workspace& workspace) {
 	});
 
 	properties.files({
-		"./src/**.cpp",
-		"./header/**.h"
+		"./sdk/angelscript/include/**.h",
+		"./sdk/angelscript/source/**.h",
+		"./sdk/angelscript/source/**.cpp",
+
+		"./sdk/add_on/**.h",
+		"./sdk/add_on/**.cpp"
 	});
 
 	properties.excluded_files({
@@ -26,9 +30,7 @@ void main(MultiBuild::Workspace& workspace) {
 		MultiBuild::ScopedFilter _(project, "project.compiler:VisualCpp");
 		properties.disable_warnings({ "4468", "4244", "4996" });
 
-		properties.files({
-			"./sdk/angelscript/source/as_callfunc_x64_msvc_asm.asm"
-		});
+		properties.files("./sdk/angelscript/source/as_callfunc_x64_msvc_asm.asm");
 	}
 
 	{
