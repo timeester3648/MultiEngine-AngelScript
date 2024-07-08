@@ -32,7 +32,7 @@ void main(MultiBuild::Workspace& workspace) {
 	}
 
 	{
-		MultiBuild::ScopedFilter _(project, "project.compiler:VisualCpp && file:**as_callfunc_x64_msvc_asm.asm");
+		MultiBuild::ScopedFilter _(project, "project.compiler:VisualCpp && file.path:**as_callfunc_x64_msvc_asm.asm");
 		properties.build_message("Compiling {:file.name}");
 
 		properties.build_commands({
