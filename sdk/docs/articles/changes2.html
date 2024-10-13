@@ -15,16 +15,51 @@ BODY { FONT-SIZE: 12px; FONT-FAMILY: Arial; }
 
 <h1>AngelScript Change Log</h1>
 
-<h2>Version 2.38.0 WIP - 2024/07/28</h2>
+<h2>Version 2.38.0 WIP - 2024/10/05</h2>
 
 <ul>
+<li>Bug fixes
+<ul>
+<li>Use of computed gotos on gnuc and clang was not enabled by default (Thanks Asu)
+<li>Fixed crash in context if the engine was shutdown while a context was still suspended
+<li>Fixed assert failure in compiler when trying to initialize an ashandle type with a value type (Thanks Miss)
+<li>Fixed crash in compiler when compiling value assignment to null handle (Thanks Sam Tupy)
+<li>Fixed parsing of declaration of global variable initialized with a template that takes multiple subtypes (Thanks Patrick Jeeves)
+<li>Fixed crash when initializing global variable of scoped type declared with direct construct call
+<li>Fixed compilation global variable initialization with assignment so value doesn't have to be copied (Thanks Patrick Jeeves)
+<li>Fixed some compilation errors in as_callfunc_arm64_msvc.asm (Thanks Manuel Lauss)
+<li>Fixed crash in GetThisPointer on contexts with nested state (Thanks Patrick Jeeves)
+</ul>
+<li>Library
+<ul>
+<li>Implemented support for registering template functions with RegisterGlobalFunction and RegisterObjectMethod using generic calling convention (Thanks MindOfTony)
+<li>Included a new function type asFUNC_TEMPLATE to indicate the template functions
+<li>Added engine property asEP_MEMBER_INIT_MODE to allow backwards compatiblity for how class members are initialized
+<li>Added engine property asEP_BOOL_CONVERSION_MODE to enable or disable contextual conversion to bool
+</ul>
 <li>Library interface
 <ul>
 <li>Deprecated GetStringFactoryReturnTypeId, and implemented GetStringFactory instead (Thanks HenryAWE)
+<li>Included GetSubTypeCount, GetSubTypeId, GetSubType to asIScriptFunction for template functions
 </ul>
-<li>Add-ons
+<li>Script language
+<ul>
+<li>It is now possible to instantiate registered template functions and call them (Thanks MindOfTony)
+<li>A class member can now be explicitly initialized in the class constructor, overriding the initialization defined in the declaration (Thanks Patrick Jeeves)
+<li>Implemented contextual conversion to bool in conditions and boolean operations (Thanks HenryAWE)
+</ul>
+<li>Add-ons &amp; Samples
 <ul>
 <li>Made parseFloat in std::string add-on threadsafe (Thanks gjl)
+<li>Fixed issue in script builder with metadata for variable declarations using direct object initialization (Thanks Miss)
+<li>Implemented a script socket add-on
+<li>asrun can now use sockets to setup a simple server, or connect to remote sockets
+<li>Fixed crash in CScriptBuilder when parsing metadata in namespaces declared with nested scope on single line (Thanks Programier)
+<li>Added get_weekDay to datetime add-on
+</ul>
+<li>project
+<ul>
+<li>Fixed cmake project for compiling on Risc-V 64bit (Thanks Vixea 0)
 </ul>
 </ul>
 

@@ -377,6 +377,8 @@ The following flags are covered by asGetTypeTraits:
 <tr><td>\ref asOBJ_APP_ARRAY                  &nbsp; </td><td>The C++ type is an array</td></tr>
 </table>
 
+\todo explain how to interpret when the constructor, copy constructor or operator= has been defaulted with '= default'
+
 On some platforms the native calling convention may require further knowledge about the class and its members that \ref asGetTypeTraits
 cannot determine in order to work properly. Whether or not the flags are needed depends on the compiler and target platform, but if the flags
 are not needed AngelScript will simply ignore them so there is no harm in informing them.
@@ -621,6 +623,8 @@ r = engine->RegisterObjectProperty("mytype", "othertype &a", asOFFSET(MyStruct,a
 
 Of course, the application must make sure the pointer is valid during the whole time 
 that it may be accessed from the script.
+
+\todo describe limitation with asOFFSET and members declared as references. suggest manually calculate offset relative to adjacent member, but alert on byte alignment
 
 \section doc_reg_objprop_composite Composite members
 

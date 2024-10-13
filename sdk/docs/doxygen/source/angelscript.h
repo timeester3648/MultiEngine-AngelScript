@@ -702,6 +702,7 @@ typedef void (*asJITFunction)(asSVMRegisters* registers, asPWORD jitArg);
 // This macro does basically the same thing as offsetof defined in stddef.h, but
 // GNUC should not complain about the usage as I'm not using 0 as the base pointer.
 //! \brief Returns the offset of an attribute in a struct
+//! \todo Explain that it doesn't work for members that are declared as references. For these the offset must be manually calculated. Reference Register object properties with a more detailed explanation on how to deal with this
 #define asOFFSET(s,m) ((int)(size_t)(&reinterpret_cast<s*>(100000)->m)-100000)
 
 //! \brief Returns an asSFuncPtr representing the function specified by the name
@@ -4083,6 +4084,8 @@ public:
 	//! The returned pointer is null when the function doesn't originate from a script file, i.e.
 	//! a registered function or an auto-generated script function. It can also be null if the information
 	//! has been removed, e.g. when saving bytecode without debug info.
+	//! 
+	//! \todo Move this to the Debug information section
 	virtual const char      *GetScriptSectionName() const = 0;
 	//! \brief Returns the name of the config group in which the function was registered.
 	//! \return The name of the config group, or null if not in any group.

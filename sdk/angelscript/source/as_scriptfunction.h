@@ -183,6 +183,11 @@ public:
 	int                  GetParam(asUINT index, int *typeId, asDWORD *flags = 0, const char **name = 0, const char **defaultArg = 0) const;
 	int                  GetReturnTypeId(asDWORD *flags = 0) const;
 
+	// Template functions
+	asUINT       GetSubTypeCount() const;
+	int          GetSubTypeId(asUINT subTypeIndex = 0) const;
+	asITypeInfo* GetSubType(asUINT subTypeIndex = 0) const;
+
 	// Type id for function pointers
 	int                  GetTypeId() const;
 	bool                 IsCompatibleWithTypeId(int typeId) const;
@@ -285,6 +290,9 @@ public:
 	void EnumReferences(asIScriptEngine *engine);
 	void ReleaseAllHandles(asIScriptEngine *engine);
 
+	// Don't allow the script function to be copied
+	asCScriptFunction(const asCScriptFunction&) = delete;
+
 public:
 	//-----------------------------------
 	// Properties
@@ -301,6 +309,7 @@ public:
 	asCString                    name;
 	asCDataType                  returnType;
 	asCArray<asCDataType>        parameterTypes;
+	asCArray<asCDataType>        templateSubTypes; // Increase ref of template subtypes
 	asCArray<asCString>          parameterNames;
 	asCArray<asETypeModifiers>   inOutFlags;
 	asCArray<asCString *>        defaultArgs;

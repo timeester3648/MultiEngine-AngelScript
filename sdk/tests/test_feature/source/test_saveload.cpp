@@ -599,7 +599,7 @@ bool Test()
 		mod->Discard();
 
 		asDWORD crc32 = ComputeCRC32(&stream.buffer[0], asUINT(stream.buffer.size()));
-		if (crc32 != 0x2921B64D)
+		if (crc32 != 0x21EC7158)
 		{
 			PRINTF("The saved byte code has different checksum than the expected. Got 0x%X\n", crc32);
 			TEST_FAILED;
@@ -1746,7 +1746,7 @@ bool Test()
 
 		engine->ShutDownAndRelease();
 
-		if( bout.buffer != "config (62, 0) : Warning : Cannot register template callback without the actual implementation\n" )
+		if( bout.buffer != "config (64, 0) : Warning : Cannot register template callback without the actual implementation\n" )
 		{
 			PRINTF("%s", bout.buffer.c_str());
 			TEST_FAILED;
@@ -1817,6 +1817,8 @@ bool Test()
 					"ep 35 1\n"
 					"ep 36 0\n"
 					"ep 37 0\n"
+					"ep 38 1\n"
+					"ep 39 0\n"
 					"\n"
 					"// Enums\n"
 					"\n"
@@ -1913,7 +1915,8 @@ bool Test()
 		r = ctx->Execute();
 		if( r != asEXECUTION_EXCEPTION ) // should fail since the imported function is not bound
 			TEST_FAILED;
-		if( string(ctx->GetExceptionString()) == "Unbound function called" )
+		if (string(ctx->GetExceptionString()) != "Unbound function called")
+			TEST_FAILED;
 		ctx->Release();
 
 		CBytecodeStream bytecode("");
@@ -1943,7 +1946,7 @@ bool Test()
 			g_func = 0;
 		}
 
-		engine->Release();
+		engine->ShutDownAndRelease();
 	}
 
 	// Test saving and loading with template in a namespace

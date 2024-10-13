@@ -30,6 +30,8 @@ This page gives a brief description of the add-ons that you'll find in the /sdk/
  - \subpage doc_addon_grid
  - \subpage doc_addon_datetime
  - \subpage doc_addon_helpers_try
+ 
+\todo add socket
 
 
 
@@ -64,6 +66,7 @@ public:
   asUINT getHour() const;
   asUINT getMinute() const;
   asUINT getSecond() const;
+  asUINT getWeekDay() const;
   
   // Setters
   // Returns true if valid
@@ -969,10 +972,10 @@ In the script the this would be used in the following way:
   void main()
   {
     // Get the function pointer as a generic ref
-    ref @r = getDynamicFunction();
+    ref \@r = getDynamicFunction();
 
     // Cast the ref to the expected function pointer
-    func @f = cast<func>(r);
+    func \@f = cast<func>(r);
 
     // Call the function
     f();

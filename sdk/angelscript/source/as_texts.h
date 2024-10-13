@@ -44,12 +44,14 @@
 #define TXT_s_ALREADY_DECLARED                      "'%s' is already declared"
 #define TXT_ABSTRACT_CLASS_s_CANNOT_BE_INSTANTIATED "Abstract class '%s' cannot be instantiated"
 #define TXT_ACCESSING_PRIVATE_PROP_s                "Accessing private property '%s' of parent class"
+#define TXT_ALL_CODE_PATHS_MUST_INIT_MEMBER         "Initialization after return. All code paths must initialize the members"
 #define TXT_ARG_NOT_LVALUE                          "Output argument expression is not assignable"
 #define TXT_ATTR_s_INFORMED_MULTIPLE_TIMES          "Attribute '%s' informed multiple times"
 #define TXT_AUTO_NOT_ALLOWED                        "Auto is not allowed here"
 
 #define TXT_BOTH_MUST_BE_SAME                     "Can't find unambiguous implicit conversion to make both expressions have the same type"
 #define TXT_BOTH_CONDITIONS_MUST_CALL_CONSTRUCTOR "Both conditions must call constructor"
+#define TXT_BOTH_CONDITIONS_MUST_INIT_MEMBER_s    "Both conditions must initialize member '%s'"
 #define TXT_BASE_DOESNT_HAVE_DEF_CONSTR           "Base class doesn't have default constructor. Make explicit call to base constructor"
 #define TXT_BASE_DOESNT_HAVE_CPY_CONSTR_OR_DEF_CONSTR  "Base class doesn't have copy constructor or default constructor and assign operator. Make explicit call to base constructor"
 
@@ -66,6 +68,8 @@
 #define TXT_CANNOT_INHERIT_FROM_s_FINAL            "Can't inherit from class '%s' marked as final"
 #define TXT_CANNOT_INHERIT_FROM_MULTIPLE_CLASSES   "Can't inherit from multiple classes"
 #define TXT_CANNOT_INHERIT_FROM_SELF               "Can't inherit from itself, or another class that inherits from this class"
+#define TXT_CANNOT_INIT_MEMBERS_IN_LOOPS           "Can't initialize the members in loops"
+#define TXT_CANNOT_INIT_MEMBERS_IN_SWITCH          "Can't initialize the members in switch"
 #define TXT_CANNOT_PASS_CLASS_METHOD_AS_ARG        "Can't pass class method as arg directly. Use a delegate object instead"
 #define TXT_CANNOT_RESOLVE_AUTO                    "Unable to resolve auto type"
 #define TXT_CANNOT_ACCESS_NON_STATIC_MEMBER_s      "Cannot access non-static member '%s' like this"
@@ -168,6 +172,7 @@
 #define TXT_INVALID_UNICODE_SEQUENCE_IN_SRC        "Invalid unicode sequence in source"
 #define TXT_INVALID_USE_OF_NAMED_ARGS              "Invalid use of named arguments"
 
+#define TXT_MEMBER_ACCESSED_BEFORE_INIT             "The member has been accessed before the initialization"
 #define TXT_METHOD_CANNOT_OVERRIDE_s                "Method '%s' declared as final and cannot be overridden"
 #define TXT_METHOD_CANT_HAVE_NAME_OF_CLASS          "The method cannot be named with the class name"
 #define TXT_METHOD_s_DOES_NOT_OVERRIDE              "Method '%s' marked as override but does not replace any base class or interface method"
@@ -350,6 +355,7 @@
 #define TXT_ENGINE_REF_COUNT_ERROR_DURING_SHUTDOWN       "Uh oh! The engine's reference count is increasing while it is being destroyed. Make sure references needed for clean-up are immediately released"
 #define TXT_MODULE_IS_IN_USE                             "The module is still in use and cannot be rebuilt. Discard it and request another module"
 #define TXT_EXTRNL_REF_TO_MODULE_s                       "There is an external reference to an object in module '%s', preventing it from being deleted"
+#define TXT_FUNC_s_RELEASED_BEFORE_CLEANUP               "The engine was shutdown before the context released. Function '%s' cannot be cleaned up"
 
 // Internal names
 

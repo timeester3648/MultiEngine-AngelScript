@@ -421,6 +421,20 @@ void release_func(int* obj)
 	delete obj;
 }
 
+struct EnemyTypeDetails {
+	//...blah...
+	int a;
+};
+
+class Enemy {
+public:
+	Enemy(const EnemyTypeDetails& type) : typeRef(type), typePtr(&type) {  }
+
+	int a;
+	const EnemyTypeDetails& typeRef; //What I want, but can't register
+	const EnemyTypeDetails* typePtr;
+} e(EnemyTypeDetails());
+
 bool Test()
 {
 	bool fail = TestHelper();
@@ -431,6 +445,64 @@ bool Test()
 	CBufferedOutStream bout;
 	COutStream out;
  	asIScriptEngine *engine;
+
+	// Test placement constructor in global variable for registered type
+	// Reported by Patrick Jeeves
+	{
+		engine = asCreateScriptEngine();
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		bout.buffer = "";
+
+		engine->SetEngineProperty(asEP_INIT_GLOBAL_VARS_AFTER_BUILD, 0);
+
+		r = engine->RegisterObjectType("Foo", 0, asOBJ_REF | asOBJ_NOCOUNT); assert(r >= 0);
+		r = engine->RegisterObjectBehaviour("Foo", asBEHAVE_FACTORY, "Foo @f(int a, int b)", asFUNCTION(0), asCALL_GENERIC); assert(r >= 0);
+
+		asIScriptModule* mod = engine->GetModule("test", asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("test",
+			"Foo s = Foo(1,2); \n" // Should be allowed. There should not be a copy of the object in this case
+			"Foo t(1,2); \n"); // Syntax sugar. Same effect as previous declaration
+		r = mod->Build();
+		if (r < 0)
+			TEST_FAILED;
+
+		if (bout.buffer != "")
+		{
+			PRINTF("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+
+		engine->ShutDownAndRelease();
+	}
+
+	// Test asOFFSET for an object member property as reference
+	// https://www.gamedev.net/forums/topic/717443-registerobjectmethod-crash-registering-a-const-reference/5466144/
+	{
+		engine = asCreateScriptEngine();
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		bout.buffer = "";
+
+		r = engine->RegisterObjectType("EnemyTypeDetails", sizeof(EnemyTypeDetails), asOBJ_VALUE | asOBJ_POD); assert(r >= 0);
+		r = engine->RegisterObjectType("Enemy", 0, asOBJ_REF | asOBJ_NOCOUNT); assert(r >= 0);
+	
+		// asOFFSET cannot be used to determine the offset of the member. This is because when the
+		// address of the member is taken C++ actually returns the address that it is referring to
+		// Standard offsetof and __builtin_offsetof also do not work
+		//int off1 = offsetof(Enemy, typeRef);
+		//int off2 = __builtin_offsetof(Enemy, typeRef);
+		r = engine->RegisterObjectProperty("Enemy", "const EnemyTypeDetails &typeRef", asOFFSET(Enemy, typeRef));
+		if (r != asINVALID_ARG)
+			TEST_FAILED;
+		r = engine->RegisterObjectProperty("Enemy", "const EnemyTypeDetails &typePtr", asOFFSET(Enemy, typePtr)); assert(r >= 0);
+
+		if (bout.buffer != " (0, 0) : Error   : Failed in call to function 'RegisterObjectProperty' with 'Enemy' and 'const EnemyTypeDetails &typeRef' (Code: asINVALID_ARG, -5)\n")
+		{
+			PRINTF("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+
+		engine->ShutDownAndRelease();
+	}
 
 	// Test factory functions with auxiliary pointers using asOBJ_CDECL_OBJLAST and asOBJ_CDECL_OBJFIRST
 	// https://www.gamedev.net/forums/topic/711801-why-are-the-ascall_cdecl_objlastfirst-calling-conventions-only-supported-in-methods/5445516/
@@ -2556,6 +2628,7 @@ bool TestAlignedScoped()
 		asIScriptModule *mod = engine->GetModule("test", asGM_ALWAYS_CREATE);
 		mod->AddScriptSection("test",
 			"vec g_pos = vec(-74.25679016113281f, 0.0f, 27.4027156829834f); \n"
+			"vec g_pos2(-74.25679016113281f, 0.0f, 27.4027156829834f); \n"
 			"void loop() \n"
 			"{ \n"
 			"  vec l_pos = vec(-74.25679016113281f, 0.0f, 27.4027156829834f); \n"
@@ -2565,6 +2638,10 @@ bool TestAlignedScoped()
 		// TODO: runtime optimize: The bytecode produced is not optimal. It should use the copy constructor to copy the global variable to a local variable
 		r = mod->Build();
 		if( r < 0 )
+			TEST_FAILED;
+
+		vec* g_pos = reinterpret_cast<vec*>(mod->GetAddressOfGlobalVar(mod->GetGlobalVarIndexByName("g_pos")));
+		if (g_pos == 0 || (g_pos->x < -75 || g_pos->x > -74))
 			TEST_FAILED;
 
 		r = ExecuteString(engine, "loop()", mod);
