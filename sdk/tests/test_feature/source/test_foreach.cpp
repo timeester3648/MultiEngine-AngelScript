@@ -94,6 +94,31 @@ bool Test()
 	int r;
 	CBufferedOutStream bout;
 
+	// Test foreach on empty array of strings
+	// reported by li zhuang
+	{
+		asIScriptEngine* engine = asCreateScriptEngine();
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		bout.buffer = "";
+		RegisterStdString(engine);
+		RegisterScriptArray(engine, true);
+
+		r = ExecuteString(engine, 
+			"array<string> arr = {}; \n"
+			"foreach (auto str : arr) { \n"
+			"} \n");
+		if (r != asEXECUTION_FINISHED)
+			TEST_FAILED;
+
+		engine->ShutDownAndRelease();
+
+		if (bout.buffer != "")
+		{
+			TEST_FAILED;
+			PRINTF("%s", bout.buffer.c_str());
+		}
+	}
+
 	// Test foreach with non-pod value type
 	// https://github.com/anjo76/angelscript/issues/5
 	{

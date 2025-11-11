@@ -774,10 +774,9 @@ int asCContext::Prepare(asIScriptFunction *func)
 
 	// Reset state
 	// Most of the time the previous state will be asEXECUTION_FINISHED, in which case the values are already initialized
+	ClearException();
 	if( m_status != asEXECUTION_FINISHED )
 	{
-		m_exceptionLine           = -1;
-		m_exceptionFunction       = 0;
 		m_doAbort                 = false;
 		m_doSuspend               = false;
 		m_regs.doProcessSuspend   = m_lineCallback;
@@ -808,7 +807,17 @@ int asCContext::Prepare(asIScriptFunction *func)
 	return asSUCCESS;
 }
 
-// Free all resources
+// internal
+void asCContext::ClearException()
+{
+	m_exceptionString = "";
+	m_exceptionFunction = 0;
+	m_exceptionLine = -1;
+	m_exceptionColumn = -1;
+	m_exceptionSectionIdx = 0;
+}
+
+// interface
 int asCContext::Unprepare()
 {
 	if( m_status == asEXECUTION_ACTIVE || m_status == asEXECUTION_SUSPENDED )
@@ -853,9 +862,9 @@ int asCContext::Unprepare()
 	}
 
 	// Clear function pointers
+	ClearException();
 	m_initialFunction = 0;
 	m_currentFunction = 0;
-	m_exceptionFunction = 0;
 	m_regs.programPointer = 0;
 
 	// Reset status
@@ -3554,8 +3563,17 @@ static const void *const dispatch_table[256] = {
 		NEXT_INSTRUCTION();
 
 	INSTRUCTION(asBC_fTOu):
-		// We must cast to int first, because on some compilers the cast of a negative float value to uint result in 0
-		*(l_fp - asBC_SWORDARG0(l_bc)) = asUINT(int(*(float*)(l_fp - asBC_SWORDARG0(l_bc))));
+		{
+			float f = *(float*)(l_fp - asBC_SWORDARG0(l_bc));
+			if (f < 0)
+			{
+				// For consistency across compilers and target systems we must cast to int first, 
+				// because on some compilers the cast of a negative float value to uint result in 0
+				*(l_fp - asBC_SWORDARG0(l_bc)) = asUINT(int(f));
+			}
+			else
+				*(l_fp - asBC_SWORDARG0(l_bc)) = asUINT(f);
+		}
 		l_bc++;
 		NEXT_INSTRUCTION();
 
@@ -3589,8 +3607,17 @@ static const void *const dispatch_table[256] = {
 		NEXT_INSTRUCTION();
 
 	INSTRUCTION(asBC_dTOu):
-		// We must cast to int first, because on some compilers the cast of a negative float value to uint result in 0
-		*(l_fp - asBC_SWORDARG0(l_bc)) = asUINT(int(*(double*)(l_fp - asBC_SWORDARG1(l_bc))));
+		{
+			double d = *(double*)(l_fp - asBC_SWORDARG1(l_bc));
+			if (d < 0)
+			{
+				// For consistency across compilers and target systems we must cast to int first, 
+				// because on some compilers the cast of a negative float value to uint result in 0
+				*(l_fp - asBC_SWORDARG0(l_bc)) = asUINT(int(d));
+			}
+			else
+				*(l_fp - asBC_SWORDARG0(l_bc)) = asUINT(d);
+		}
 		l_bc += 2;
 		NEXT_INSTRUCTION();
 
@@ -4020,12 +4047,32 @@ static const void *const dispatch_table[256] = {
 		NEXT_INSTRUCTION();
 
 	INSTRUCTION(asBC_fTOu64):
-		*(asQWORD*)(l_fp - asBC_SWORDARG0(l_bc)) = asQWORD(asINT64(*(float*)(l_fp - asBC_SWORDARG1(l_bc))));
+		{
+			float f = *(float*)(l_fp - asBC_SWORDARG1(l_bc));
+			if (f < 0)
+			{
+				// For consistency across compilers and target systems we must cast to int first, 
+				// because on some compilers the cast of a negative float value to uint result in 0
+				*(asQWORD*)(l_fp - asBC_SWORDARG0(l_bc)) = asQWORD(asINT64(f));
+			}
+			else
+				*(asQWORD*)(l_fp - asBC_SWORDARG0(l_bc)) = asQWORD(f);
+		}
 		l_bc += 2;
 		NEXT_INSTRUCTION();
 
 	INSTRUCTION(asBC_dTOu64):
-		*(asQWORD*)(l_fp - asBC_SWORDARG0(l_bc)) = asQWORD(asINT64(*(double*)(l_fp - asBC_SWORDARG0(l_bc))));
+		{
+			double d = *(double*)(l_fp - asBC_SWORDARG0(l_bc));
+			if (d < 0)
+			{
+				// For consistency across compilers and target systems we must cast to int first, 
+				// because on some compilers the cast of a negative float value to uint result in 0
+				*(asQWORD*)(l_fp - asBC_SWORDARG0(l_bc)) = asQWORD(asINT64(d));
+			}
+			else
+				*(asQWORD*)(l_fp - asBC_SWORDARG0(l_bc)) = asQWORD(d);
+		}
 		l_bc++;
 		NEXT_INSTRUCTION();
 
@@ -4942,12 +4989,12 @@ static const void *const dispatch_table[256] = {
 	INSTRUCTION(255): l_bc = (asDWORD*)255; goto case_FAULT;
 #endif
 
-#ifdef AS_DEBUG
+#if defined(AS_DEBUG) && !defined(AS_USE_COMPUTED_GOTOS)
 	default:
 		asASSERT(false);
 		SetInternalException(TXT_UNRECOGNIZED_BYTE_CODE);
 #endif
-#if defined(_MSC_VER) && !defined(AS_DEBUG)
+#if defined(_MSC_VER) && !defined(AS_DEBUG) && !defined(AS_USE_COMPUTED_GOTOS)
 	default:
 		// This Microsoft specific code allows the
 		// compiler to optimize the switch case as

@@ -14,6 +14,7 @@ jobs:
     - name: build angelscript
       run: |
         cd $GITHUB_WORKSPACE/sdk/angelscript/projects/gnuc
+        export "CXXFLAGS=-O2"
         make
     - name: build test_feature
       run: |
@@ -24,6 +25,38 @@ jobs:
         cd $GITHUB_WORKSPACE/sdk/tests/test_feature/bin
         ./testgnuc
 
+  Linux_x86-64_GCC_AS_DEBUG:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: build angelscript
+      run: |
+        cd $GITHUB_WORKSPACE/sdk/angelscript/projects/gnuc
+        export "CXXFLAGS=-DAS_DEBUG -O0"
+        make
+    - name: build test_feature
+      run: |
+        cd $GITHUB_WORKSPACE/sdk/tests/test_feature/projects/gnuc
+        make
+    - name: run test_feature
+      run: |
+        cd $GITHUB_WORKSPACE/sdk/tests/test_feature/bin
+        ./testgnuc
+
+  Linux_arm64_Clang_AS_USE_NAMESPACE:
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - uses: actions/checkout@v4
+    - name: build angelscript & test_feature
+      run: |
+        cd $GITHUB_WORKSPACE/sdk/tests/test_feature/projects/cmake
+        cmake . -DCMAKE_CXX_FLAGS='-DAS_USE_NAMESPACE' -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+        cmake --build .
+    - name: run test_feature
+      run: |
+        cd $GITHUB_WORKSPACE/sdk/tests/test_feature/bin
+        ./test_feature
+        
   Windows_x86-64_Clang:      
     runs-on: windows-latest
     steps:
@@ -45,6 +78,51 @@ jobs:
       run: |
         cd $env:GITHUB_WORKSPACE/sdk/tests/test_feature/bin
         ./test_feature.exe
+
+  Windows_x86-64_Clang-Cl:      
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: set up Clang
+      uses: ilammy/msvc-dev-cmd@v1
+    - name: build angelscript & test_feature
+      run: |
+        cd ${{github.workspace}}/sdk/tests/test_feature/projects/cmake
+        cmake . -G Ninja -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --config Release
+    - name: run test_feature
+      run: |
+        cd ${{github.workspace}}/sdk/tests/test_feature/bin
+        ./test_feature.exe
+
+  MacOS_arm64_Clang:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: build angelscript & test_feature
+      run: |
+        cd $GITHUB_WORKSPACE/sdk/tests/test_feature/projects/cmake
+        cmake .
+        cmake --build .
+    - name: run test_feature
+      run: |
+        cd $GITHUB_WORKSPACE/sdk/tests/test_feature/bin
+        ./test_feature
+
+  MacOS_x86-64_Clang:
+    runs-on: macos-15-intel
+    steps:
+    - uses: actions/checkout@v4
+    - name: build angelscript & test_feature
+      run: |
+        cd $GITHUB_WORKSPACE/sdk/tests/test_feature/projects/cmake
+        cmake .
+        cmake --build .
+    - name: run test_feature
+      run: |
+        cd $GITHUB_WORKSPACE/sdk/tests/test_feature/bin
+        ./test_feature        
+        
 
 
         

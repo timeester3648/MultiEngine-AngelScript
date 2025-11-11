@@ -1574,6 +1574,7 @@ public:
 
 	//! \brief Registers an enum type.
 	//! \param[in] type The name of the enum type.
+	//! \param[in] underlyingType The underlying type for the enum.
 	//! \return The type id on success, or a negative value on error.
 	//! \retval asINVALID_NAME \a type is null, not an identifier, or it is a reserved keyword.
 	//! \retval asALREADY_REGISTERED Another type with this name already exists.
@@ -1582,7 +1583,7 @@ public:
 	//!
 	//! This method registers an enum type in the engine. The enum values should then be registered 
 	//! with \ref RegisterEnumValue.
-	virtual int          RegisterEnum(const char *type) = 0;
+	virtual int          RegisterEnum(const char* typeName, const char* underlyingType = "int32") = 0;
 	//! \brief Registers an enum value.
 	//! \param[in] type The name of the enum type.
 	//! \param[in] name The name of the enum value.
@@ -1593,7 +1594,7 @@ public:
 	//! \retval asALREADY_REGISTERED The \a name is already registered for this enum.
 	//!
 	//! This method registers an enum value for a previously registered enum type.
-	virtual int          RegisterEnumValue(const char *type, const char *name, int value) = 0;
+	virtual int          RegisterEnumValue(const char* type, const char* name, asINT64 value) = 0;
 	//! \brief Returns the number of registered enum types.
 	//! \return The number of registered enum types.
 	virtual asUINT       GetEnumCount() const = 0;
@@ -3885,6 +3886,9 @@ public:
 	//! \brief Returns the number of template sub types.
 	//! \return The number of template sub types.
 	virtual asUINT           GetSubTypeCount() const = 0;
+	//! \brief Returns the type id that the typedef or enum represents.
+	//! \return The type id that the typedef or enum represents.
+	virtual int              GetUnderlyingTypeId() const = 0;
 	//! \}
 
 	// Interfaces
@@ -4030,17 +4034,21 @@ public:
 	//! \param[in] index The index of the enum value.
 	//! \param[out] outValue Receives the value of the enum value.
 	//! \return The name of the enum value.
-	virtual const char *GetEnumValueByIndex(asUINT index, int *outValue) const = 0;
+	virtual const char *GetEnumValueByIndex(asUINT index, asINT64 *outValue) const = 0;
 	//! \}
 
+#ifdef AS_DEPRECATED
+	// deprecated since 2025-09-13, 2.39.0
 	// Typedef
 	//! \name Typedef
 	//! \{
 
 	//! \brief Returns the type id that the typedef represents.
 	//! \return The type id that the typedef represents.
+	//! \deprecated Since 2.39.0. Use \ref GetUnderlyingTypeId instead
 	virtual int GetTypedefTypeId() const = 0;
 	//! \}
+#endif
 
 	// Funcdef
 	//! \name Funcdef
