@@ -196,6 +196,22 @@ void func1(asIScriptGeneric* gen)
 	calledFunc = gen->GetFunction();
 }
 
+void funcConstruct(asIScriptGeneric* gen)
+{
+	calledFunc = gen->GetFunction();
+	gen->SetReturnAddress((void*)1); // Dummy pointer
+}
+
+void funcConstructNoArgs(asIScriptGeneric* gen)
+{
+	gen->SetReturnAddress((void*)1); // Dummy pointer
+}
+
+void dummy(asIScriptGeneric* gen)
+{
+	// Do nothing
+}
+
 bool Test()
 {
 	RET_ON_MAX_PORT
@@ -207,6 +223,154 @@ bool Test()
  	asIScriptEngine *engine = 0;
 	asIScriptModule *mod = 0;
 	asIScriptContext *ctx = 0;
+
+	// Test registering void f(?[]&). Must fail with appropriate error message
+	// Reported by Aleksander Jaronik
+	{
+		engine = asCreateScriptEngine();
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		bout.buffer = "";
+		RegisterScriptArray(engine, true);
+		r = engine->RegisterGlobalFunction("void func(?[]&)", asFUNCTION(0), asCALL_GENERIC);
+		if (r >= 0)
+			TEST_FAILED;
+		r = engine->RegisterGlobalFunction("void func2(array<?>&)", asFUNCTION(0), asCALL_GENERIC);
+		if (r >= 0)
+			TEST_FAILED;
+		if (bout.buffer != "System function (1, 12) : Error   : Data type can't be '?'\n"
+						   " (0, 0) : Error   : Failed in call to function 'RegisterGlobalFunction' with 'void func(?[]&)' (Code: asINVALID_DECLARATION, -10)\n"
+						   "System function (1, 18) : Error   : Expected data type\n"
+						   "System function (1, 18) : Error   : Instead found '?'\n"
+						   " (0, 0) : Error   : Failed in call to function 'RegisterGlobalFunction' with 'void func2(array<?>&)' (Code: asINVALID_DECLARATION, -10)\n")
+		{
+			PRINTF("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+		engine->ShutDownAndRelease();
+	}
+
+	// Test saving and loading bytecode with variadic functions
+	// Reported by Aleksander Jaronik
+	{
+		engine = asCreateScriptEngine();
+		engine->SetEngineProperty(asEP_OPTIMIZE_BYTECODE, 0);
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		bout.buffer = "";
+		RegisterStdString(engine);
+		engine->RegisterGlobalFunction("void Print(const ?&in ...)", asFUNCTION(0), asCALL_GENERIC);
+		engine->RegisterGlobalFunction("string Format(const ?&in ...)", asFUNCTION(0), asCALL_GENERIC);
+		engine->RegisterObjectMethod("string", "string Mthd(const ?&in ...)", asFUNCTION(0), asCALL_GENERIC);
+		engine->RegisterObjectBehaviour("string", asBEHAVE_CONSTRUCT, "void f(const ?&in ...)", asFUNCTION(0), asCALL_GENERIC);
+		engine->RegisterFuncdef("string CB(const ?&in ...)");
+
+		mod = engine->GetModule("mod", asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("test",
+			"void main() \n"
+			"{ \n"
+			"	for (uint i = 0; i < 10; i++) \n"
+			"	{ \n"
+			"		Print(5, 3, 1); \n" // global function
+			"		string s = Format(5, 3, 1); \n" // global function returning object by value
+			"		('a'+'b').Mthd(5, 3, 1); \n" // class method returning object by value
+			"		string t(5, 3, 1); \n" // constructor
+			"		CB @cb = Format; \n"
+			"		cb(5, 3, 1); \n" // function pointer
+			"	} \n"
+			"} \n");
+		r = mod->Build();
+		if (r < 0)
+			TEST_FAILED;
+
+		CBytecodeStream stream((std::string("AS_DEBUG/bc_") + (sizeof(void*) == 4 ? "32" : "64")).c_str());
+		r = mod->SaveByteCode(&stream);
+		if (r < 0)
+			TEST_FAILED;
+
+		mod = engine->GetModule("mod2", asGM_ALWAYS_CREATE);
+		r = mod->LoadByteCode(&stream);
+		if (r < 0)
+			TEST_FAILED;
+
+		engine->ShutDownAndRelease();
+		if (bout.buffer != "")
+		{
+			PRINTF("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+	}
+
+
+	// Test behavior of overload when matching function with vartype compared to function with default args
+	// Reported by Aleksander Jaronik
+	{
+		engine = asCreateScriptEngine();
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		bout.buffer = "";
+		engine->RegisterObjectType("MyType", 0, asOBJ_REF);
+		engine->RegisterObjectBehaviour("MyType", asBEHAVE_FACTORY, "MyType@ f()", asFUNCTION(funcConstructNoArgs), asCALL_GENERIC);
+		r = engine->RegisterObjectBehaviour("MyType", asBEHAVE_FACTORY, "MyType@ f(int a, int b = 0)", asFUNCTION(funcConstruct), asCALL_GENERIC);
+		asIScriptFunction* expectedFunc = engine->GetFunctionById(r);
+		engine->RegisterObjectBehaviour("MyType", asBEHAVE_FACTORY, "MyType@ f(?&in a)", asFUNCTION(funcConstruct), asCALL_GENERIC);
+		engine->RegisterObjectBehaviour("MyType", asBEHAVE_ADDREF, "void f()", asFUNCTION(dummy), asCALL_GENERIC);
+		engine->RegisterObjectBehaviour("MyType", asBEHAVE_RELEASE, "void f()", asFUNCTION(dummy), asCALL_GENERIC);
+		engine->RegisterObjectMethod("MyType", "MyType &opAssign(const MyType &in)", asFUNCTION(dummy), asCALL_GENERIC);
+
+		mod = engine->GetModule("mod", asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("test",
+			"void main1() { \n"
+			"  MyType t1(42); \n" // must call f(int a, int b = 0)
+			"} \n"
+			"void main2() { \n"
+			"  MyType t2 = MyType(42); \n" // must call f(int a, int b = 0)
+			"} \n");
+		r = mod->Build();
+		if (r < 0)
+			TEST_FAILED;
+
+		calledFunc = 0;
+		r = ExecuteString(engine, "main1()", mod);
+		if( r!= asEXECUTION_FINISHED )
+			TEST_FAILED;
+		if (calledFunc != expectedFunc)
+			TEST_FAILED;
+
+		calledFunc = 0;
+		r = ExecuteString(engine, "main2()", mod);
+		if (r != asEXECUTION_FINISHED)
+			TEST_FAILED;
+		if (calledFunc != expectedFunc)
+			TEST_FAILED;
+
+		engine->ShutDownAndRelease();
+		if (bout.buffer != "")
+		{
+			PRINTF("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+	}
+
+	// Test that variadic functions accept 0 args
+	// https://www.gamedev.net/forums/topic/719538-variadic-functions-can-not-take-0-args/5472673/
+	{
+		engine = asCreateScriptEngine();
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		bout.buffer = "";
+		r = engine->RegisterGlobalFunction("void func(const ?&in ...)", asFUNCTION(testFactVariadic), asCALL_GENERIC);
+		if (r < 0)
+			TEST_FAILED;
+		numArgs = -1;
+		r = ExecuteString(engine, "func();");
+		if (r != asEXECUTION_FINISHED)
+			TEST_FAILED;
+		if (numArgs != 0)
+			TEST_FAILED;
+		engine->ShutDownAndRelease();
+		if (bout.buffer != "")
+		{
+			PRINTF("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+	}
 
 	// Test function overloads with variadic functions
 	// https://github.com/anjo76/angelscript/issues/14

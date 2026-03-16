@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2025 Andreas Jonsson
+   Copyright (c) 2003-2026 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -124,7 +124,7 @@ struct asCExprContext;
 // cleaned up after the result of a function has been evaluated.
 struct asSDeferredParam
 {
-	asSDeferredParam() {argNode = 0; origExpr = 0;}
+	asSDeferredParam() : argNode(0), argInOutFlags(0), origExpr(0) {}
 
 	asCScriptNode  *argNode;
 	asCExprValue    argType;
@@ -185,6 +185,7 @@ struct asSOverloadCandidate
 
 struct asSNamedArgument
 {
+	asSNamedArgument() : ctx(0), match(0) {}
 	asCString name;
 	asCExprContext *ctx;
 	asUINT match;
@@ -250,9 +251,9 @@ struct asSFailedMatch
 	// for asEFM_POSITIONAL_MISMATCH, asEFM_NAMED_DUPLICATE: arg id
 	asUINT               arg;
 	// for asEFM_NAMED_MISSING, asEFM_NAMED_MISMATCH, asEFM_NAMED_DUPLICATE: ptr to argument string
-	const char* argName;
+	const char*          argName;
 	
-	asSFailedMatch() {}
+	asSFailedMatch() : func(0), reason(asEFM_NOT_ENOUGH_ARGS), arg(0), argName(0) {}
 	asSFailedMatch(int func, asEFailedMatchReason reason, asUINT arg = -1) :
 		func(func), reason(reason), arg(arg), argName(NULL) {}
 	asSFailedMatch(int func, asEFailedMatchReason reason, const char* argName) :
@@ -350,7 +351,7 @@ protected:
 	int  MatchArgument(asCScriptFunction *desc, const asCExprContext *argExpr, int paramNum, bool allowObjectConstruct = true);
 	void PerformFunctionCall(int funcId, asCExprContext *out, bool isConstructor = false, asCArray<asCExprContext*> *args = 0, asCObjectType *objTypeForConstruct = 0, bool useVariable = false, int varOffset = 0, int funcPtrVar = 0);
 	void MoveArgsToStack(int funcId, asCByteCode *bc, asCArray<asCExprContext *> &args, bool addOneToOffset);
-	int  MakeFunctionCall(asCExprContext *ctx, int funcId, asCObjectType *objectType, asCArray<asCExprContext*> &args, asCScriptNode *node, bool useVariable = false, int stackOffset = 0, int funcPtrVar = 0);
+	int  MakeFunctionCall(asCExprContext *ctx, int funcId, asCObjectType *objectType, asCArray<asCExprContext*> &args, asCScriptNode *node, bool useVariable = false, int stackOffset = 0, int funcPtrVar = 0, bool onHeap = false);
 	int  PrepareFunctionCall(int funcId, asCByteCode *bc, asCArray<asCExprContext *> &args);
 	void AfterFunctionCall(int funcId, asCArray<asCExprContext*> &args, asCExprContext *ctx, bool deferAll);
 	void ProcessDeferredParams(asCExprContext *ctx, bool processOnlyOutRef = false);

@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2025 Andreas Jonsson
+   Copyright (c) 2003-2026 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
@@ -49,7 +49,7 @@ BEGIN_AS_NAMESPACE
 #define LOAD_FROM_BIT(dst, val, bit) ((dst) = ((val) >> (bit)) & 1)
 
 asCReader::asCReader(asCModule* _module, asIBinaryStream* _stream, asCScriptEngine* _engine)
-	: module(_module), stream(_stream), engine(_engine), error(false), bytesRead(0), lastCompositeProp(0)
+	: module(_module), stream(_stream), engine(_engine), error(false), bytesRead(0), lastCompositeProp(0), noDebugInfo(false)
 {
 }
 
@@ -1552,7 +1552,7 @@ asCScriptFunction *asCReader::ReadFunction(bool &isNew, bool addToModule, bool a
 		else
 		{
 			asCString str;
-			str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL, func->objectType->GetName());
+			str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL_s, func->objectType->GetName(), func->objectType->GetModule() ? func->objectType->GetModule()->GetName() : "");
 			engine->WriteMessage("", 0, 0, asMSGTYPE_ERROR, str.AddressOf());
 			
 			Error(TXT_INVALID_BYTECODE_d);
@@ -1709,7 +1709,7 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 					if( !found )
 					{
 						asCString str;
-						str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL, type->GetName());
+						str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL_s, type->GetName(), type->GetModule() ? type->GetModule()->GetName() : "");
 						engine->WriteMessage("", 0, 0, asMSGTYPE_ERROR, str.AddressOf());
 						Error(TXT_INVALID_BYTECODE_d);
 					}
@@ -1737,7 +1737,7 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 				if( ot->derivedFrom != dt )
 				{
 					asCString str;
-					str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL, type->GetName());
+					str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL_s, type->GetName(), type->GetModule() ? type->GetModule()->GetName() : "");
 					engine->WriteMessage("", 0, 0, asMSGTYPE_ERROR, str.AddressOf());
 					Error(TXT_INVALID_BYTECODE_d);
 				}
@@ -1762,7 +1762,7 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 					if( !type->Implements(intf) )
 					{
 						asCString str;
-						str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL, type->GetName());
+						str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL_s, type->GetName(), type->GetModule() ? type->GetModule()->GetName() : "");
 						engine->WriteMessage("", 0, 0, asMSGTYPE_ERROR, str.AddressOf());
 						Error(TXT_INVALID_BYTECODE_d);
 					}
@@ -1804,7 +1804,7 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 					else
 					{
 						asCString str;
-						str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL, type->GetName());
+						str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL_s, type->GetName(), type->GetModule() ? type->GetModule()->GetName() : "");
 						engine->WriteMessage("", 0, 0, asMSGTYPE_ERROR, str.AddressOf());
 						Error(TXT_INVALID_BYTECODE_d);
 					}
@@ -1857,7 +1857,7 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 							if( !found )
 							{
 								asCString str;
-								str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL, type->GetName());
+								str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL_s, type->GetName(), type->GetModule() ? type->GetModule()->GetName() : "");
 								engine->WriteMessage("", 0, 0, asMSGTYPE_ERROR, str.AddressOf());
 								Error(TXT_INVALID_BYTECODE_d);
 							}
@@ -1906,7 +1906,7 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 							if( !found )
 							{
 								asCString str;
-								str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL, type->GetName());
+								str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL_s, type->GetName(), type->GetModule() ? type->GetModule()->GetName() : "");
 								engine->WriteMessage("", 0, 0, asMSGTYPE_ERROR, str.AddressOf());
 								Error(TXT_INVALID_BYTECODE_d);
 							}
@@ -1963,7 +1963,7 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 						if( !found )
 						{
 							asCString str;
-							str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL, type->GetName());
+							str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL_s, type->GetName(), type->GetModule() ? type->GetModule()->GetName() : "");
 							engine->WriteMessage("", 0, 0, asMSGTYPE_ERROR, str.AddressOf());
 							Error(TXT_INVALID_BYTECODE_d);
 						}
@@ -2028,7 +2028,7 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 						if( !found )
 						{
 							asCString str;
-							str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL, type->GetName());
+							str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL_s, type->GetName(), type->GetModule() ? type->GetModule()->GetName() : "");
 							engine->WriteMessage("", 0, 0, asMSGTYPE_ERROR, str.AddressOf());
 							Error(TXT_INVALID_BYTECODE_d);
 						}
@@ -2629,6 +2629,7 @@ void asCReader::ReadByteCode(asCScriptFunction *func)
 		case asBCTYPE_wW_rW_ARG:
 		case asBCTYPE_rW_rW_ARG:
 		case asBCTYPE_wW_W_ARG:
+		case asBCTYPE_W_rW_ARG:
 			{
 				*(asBYTE*)(bc) = b;
 
@@ -2690,6 +2691,25 @@ void asCReader::ReadByteCode(asCScriptFunction *func)
 				*bc++ = dw;
 			}
 			break;
+		case asBCTYPE_W_QW_DW_ARG:
+			{
+				*(asBYTE*)(bc) = b;
+
+				// Read the first argument
+				asWORD w = ReadEncodedUInt16();
+				*(((asWORD*)bc) + 1) = w;
+				bc++;
+
+				// Read the second argument
+				asQWORD qw = ReadEncodedUInt64();
+				*(asQWORD*)bc = qw;
+				bc += 2;
+
+				// Read the third argument
+				asDWORD dw = ReadEncodedUInt();
+				*bc++ = dw;
+			}
+			break;
 		case asBCTYPE_rW_QW_ARG:
 		case asBCTYPE_wW_QW_ARG:
 			{
@@ -2707,6 +2727,7 @@ void asCReader::ReadByteCode(asCScriptFunction *func)
 			}
 			break;
 		case asBCTYPE_rW_DW_DW_ARG:
+		case asBCTYPE_W_DW_DW_ARG:
 			{
 				*(asBYTE*)(bc) = b;
 
@@ -3240,6 +3261,12 @@ void asCReader::TranslateFunction(asCScriptFunction *func)
 			}
 			break;
 
+		case asBCTYPE_W_rW_ARG:
+			{
+				asBC_SWORDARG1(&bc[n]) = (short)AdjustStackPosition(asBC_SWORDARG1(&bc[n]));
+			}
+			break;
+
 		default:
 			// The other types don't treat variables so won't be modified
 			break;
@@ -3539,7 +3566,22 @@ void asCReader::CalculateStackNeeded(asCScriptFunction *func)
 				asCScriptFunction *called = func->GetCalledFunction(pos);
 				if( called )
 				{
-					stackInc = -called->GetSpaceNeededForArguments();
+					// For variadic functions we need to determine the number of arguments from the bytecode and calculate the stackInc accordingly
+					if (called->IsVariadic())
+					{ 
+						// Only these instructions can be used to call variadic functions
+						asASSERT(bc == asBC_CALLSYS || bc == asBC_ALLOC || bc == asBC_CallPtr);
+
+						// Read the number of arguments from the bytecode instruction
+						int numArgs = asBC_WORDARG0(&func->scriptData->byteCode[pos]);
+
+						// Calculate the actual size of arguments for this function call
+						stackInc = -(called->GetSpaceNeededForArguments() + // size of fixed arguments
+							(numArgs - int(called->parameterTypes.GetLength()))*called->parameterTypes[called->parameterTypes.GetLength()-1].GetSizeOnStackDWords() + // size of dynamic arguments
+							1); // argument count
+					}
+					else
+						stackInc = -called->GetSpaceNeededForArguments();
 					if( called->objectType )
 						stackInc -= AS_PTR_SIZE;
 					if( called->DoesReturnOnStack() )
@@ -3958,10 +4000,10 @@ int asCWriter::WriteData(const void *data, asUINT size)
 	int ret = 0;
 #if defined(AS_BIG_ENDIAN)
 	for( asUINT n = 0; ret >= 0 && n < size; n++ )
-		ret = stream->Write(((asBYTE*)data)+n, 1);
+		ret = stream->Write(((const asBYTE*)data)+n, 1);
 #else
 	for( int n = size-1; ret >= 0 && n >= 0; n-- )
-		ret = stream->Write(((asBYTE*)data)+n, 1);
+		ret = stream->Write(((const asBYTE*)data)+n, 1);
 #endif
 	if (ret < 0)
 		Error(TXT_UNEXPECTED_END_OF_FILE);
@@ -5041,7 +5083,7 @@ int asCWriter::AdjustGetOffset(int offset, asCScriptFunction *func, asDWORD prog
 		}
 		else if( bc == asBC_CallPtr )
 		{
-			int var = asBC_SWORDARG0(&func->scriptData->byteCode[n]);
+			int var = asBC_SWORDARG1(&func->scriptData->byteCode[n]);
 			asUINT v;
 			// Find the funcdef from the local variable
 			for (v = 0; v < func->scriptData->variables.GetLength(); v++)
@@ -5184,7 +5226,7 @@ void asCWriter::WriteByteCode(asCScriptFunction *func)
 		// Copy the instruction to a temp buffer so we can work on it before saving
 		memcpy(tmpBC, bc, asBCTypeSize[asBCInfo[c].type]*sizeof(asDWORD));
 
-		if( c == asBC_ALLOC ) // PTR_DW_ARG
+		if( c == asBC_ALLOC ) // W_PTR_DW_ARG
 		{
 			// Translate the object type
 			asCObjectType *ot = *(asCObjectType**)(tmpBC+1);
@@ -5258,7 +5300,7 @@ void asCWriter::WriteByteCode(asCScriptFunction *func)
 		}
 		else if( c == asBC_CALL ||     // DW_ARG
 				 c == asBC_CALLINTF || // DW_ARG
-				 c == asBC_CALLSYS ||  // DW_ARG
+				 c == asBC_CALLSYS ||  // W_DW_ARG
 				 c == asBC_Thiscall1 ) // DW_ARG
 		{
 			// Translate the function id
@@ -5424,6 +5466,12 @@ void asCWriter::WriteByteCode(asCScriptFunction *func)
 			}
 			break;
 
+		case asBCTYPE_W_rW_ARG:
+			{
+				asBC_SWORDARG1(tmpBC) = (short)AdjustStackPosition(asBC_SWORDARG1(tmpBC));
+			}
+			break;
+
 		default:
 			// The other types don't treat variables so won't be modified
 			break;
@@ -5516,6 +5564,7 @@ void asCWriter::WriteByteCode(asCScriptFunction *func)
 		case asBCTYPE_wW_rW_ARG:
 		case asBCTYPE_rW_rW_ARG:
 		case asBCTYPE_wW_W_ARG:
+		case asBCTYPE_W_rW_ARG:
 			{
 				// Write the instruction code
 				asBYTE b = (asBYTE)c;
@@ -5576,6 +5625,25 @@ void asCWriter::WriteByteCode(asCScriptFunction *func)
 				WriteEncodedInt64(dw);
 			}
 			break;
+		case asBCTYPE_W_QW_DW_ARG:
+			{
+				// Write the instruction code
+				asBYTE b = (asBYTE)c;
+				WriteData(&b, 1);
+
+				// Write the first argument
+				short w = *(((short*)tmpBC) + 1);
+				WriteEncodedInt64(w);
+
+				// Write the second argument
+				asQWORD qw = *(asQWORD*)&tmpBC[1];
+				WriteEncodedInt64(qw);
+
+				// Write the third argument
+				int dw = tmpBC[3];
+				WriteEncodedInt64(dw);
+			}
+			break;
 		case asBCTYPE_rW_QW_ARG:
 		case asBCTYPE_wW_QW_ARG:
 			{
@@ -5593,6 +5661,7 @@ void asCWriter::WriteByteCode(asCScriptFunction *func)
 			}
 			break;
 		case asBCTYPE_rW_DW_DW_ARG:
+		case asBCTYPE_W_DW_DW_ARG:
 			{
 				// Write the instruction code
 				asBYTE b = (asBYTE)c;

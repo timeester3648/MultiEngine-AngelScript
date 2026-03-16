@@ -15,7 +15,7 @@ BODY { FONT-SIZE: 12px; FONT-FAMILY: Arial; }
 
 <h1>AngelScript Change Log</h1>
 
-<h2>Version 2.39.0 WIP - 2025/11/10</h2>
+<h2>Version 2.39.0 WIP - 2026/03/16</h2>
 
 <ul>
 <li>Bug fixes
@@ -35,7 +35,6 @@ BODY { FONT-SIZE: 12px; FONT-FAMILY: Arial; }
 <li>Fixed crash that could happen while loading saved bytecode on certain compilers and platforms (Thanks Aleksander Jaronik)
 <li>Variadic functions were incorrectly matched to non-variadic functions when the argument types were the same (Thanks oktonion)
 <li>Fixed compiler error for Android NDK (Thanks luadebug)
-<li>Added AS_NO_EXCEPTIONS for MacOS x64 with Clang as the stack unwind is currently not working
 <li>Fixed problem with calling constructor that has only default arguments (Thanks jit-zs)
 <li>Fixed crash on CompilerGlobalVar when attempting to clean up after a name conflict (Thanks Wing-summer)
 <li>Included error message when declaring virtual set property with &amp; for types that do not support it (Thanks Mikk155)
@@ -44,6 +43,20 @@ BODY { FONT-SIZE: 12px; FONT-FAMILY: Arial; }
 <li>Fixed registration of multiple methods referring to template specialized types (Thanks Jackozzo)
 <li>Call to default constructor where constructor has default arguments wouldn't free temporary variables (Thanks Patrick Jeeves)
 <li>Fixed assert failure on explicit conversion from bool (Thanks codecat)
+<li>Fixed crash after calling Unprepare on nested context (Thanks LeonMrBonnie)
+<li>Fixed compiler warnings (Thanks Jordon Moss)
+<li>Fixed issue with initialization lists and inheritance where the initialization list element could get the wrong type (Thanks Violet CLM)
+<li>Fixed assert error on some expressions with ternary conditions (Thanks tspivey)
+<li>Variadic functions now accept 0 args (Thanks Alexander Orefkov)
+<li>Fixed case where a construct call could use the wrong function if there were valid value cast options (Thanks Aleksander Jaronik)
+<li>Fixed assert error on using foreach within switch statement (Thanks Fort-TM)
+<li>Fixed assert error on compiling initialization lists where the element must be converted (Thanks Miss)
+<li>Fixed instantiating delegates for global functions (Thanks Miss)
+<li>Compiler didn't give proper error when passing primitive to function expecting &amp;inout to object (Thanks Wambo)
+<li>When compiling bitwise operator the compiler will try to convert object types to math type (Thanks Violet CLM)
+<li>Fixed loading bytecode that uses variadic functions (Thanks Aleksander Jaronik)
+<li>Declaring a type as ?[] will no longer be silently accepted (Thanks Aleksander Jaronik)
+<li>Fixed exception handling with native calling convention and clang on MacOS x86-64 (Thanks pollend)
 </ul>
 <li>Library
 <ul>
@@ -52,6 +65,8 @@ BODY { FONT-SIZE: 12px; FONT-FAMILY: Arial; }
 <li>Improved error messages for function matching to indicate the reason a match failed (Thanks Paril)
 <li>asIJITCompilerV2::CleanFunction is now called for all script functions regardless if the JIT function was compiled or not (Thanks Asu)
 <li>Improved error message when lambda function can't be converted to target type (Thanks Aaron Baker)
+<li>Made the core library code compatible with C++98 again (Thanks oktonion)
+<li>Improved error message for mismatching shared declaration to inform the other module (Thanks Miss)
 </ul>
 <li>Library interface
 <ul>
@@ -59,6 +74,11 @@ BODY { FONT-SIZE: 12px; FONT-FAMILY: Arial; }
 <li>Now it is possible to register enum types with defined underlying types (Thanks Paril)
 <li>Added asITypeInfo::GetUnderlyingTypeId for retrieving the underlying type for enums and typedefs
 <li>Deprecated asITypeInfo::GetTypedefTypeId
+<li>Deprecated asIScriptFunction::FindNextLineWithCode
+</ul>
+<li>Virtual machine
+<ul>
+<li>Changed asBC_CALLSYS, asBC_ALLOC, and asBC_CallPtr to hold an extra WORD with the arg count for variadic functions
 </ul>
 <li>Script language
 <ul>
@@ -66,9 +86,19 @@ BODY { FONT-SIZE: 12px; FONT-FAMILY: Arial; }
 <li>Enums can now be declared with underlying type to define the size of the enum (Thanks Paril)
 <li>Variadic functions are no longer matching if there is a more specialized matching function for a call (Thanks oktonion)
 </ul>
+<li>Add-ons &amp; Samples
+<ul>
+<li>Prepared the samples for building on unix based OS (Thanks Yangfl)
+<li>Added option to use the full file path for breakpoints in the debugger (Thanks OriolCS2)
+<li>Debugger is now using the GetLineEntry to move the breakpoint to next valid line
+<li>Improved compatibility for C++98 in add-ons (Thanks oktonion)
+<li>Fixed memory leak upon cleanup of dictionaryValue used standalone as a global var (Thanks li zhuang)
+<li>Fixed string add-on's format with uint8 (Thanks li zhuang)
+</ul>
 <li>Project
 <ul>
 <li>Added port of MSVC assembly to GNU/AT&amp;T assembly for pure clang builds on Windows (Thanks OctalCodes)
+<li>Updated meson project file to add support for riscv64 processors (Thanks Vixea 0)
 </ul>
 </ul>
 

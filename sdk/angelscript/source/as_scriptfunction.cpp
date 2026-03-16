@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2025 Andreas Jonsson
+   Copyright (c) 2003-2026 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
@@ -840,7 +840,11 @@ asCString asCScriptFunction::GetDeclarationStr(bool includeObjectName, bool incl
 	return str;
 }
 
+#ifdef AS_DEPRECATED
+// deprecated since 2025-11-14, 2.39.0
 // interface
+// Deprecate this function in favor of GetLineEntryCount and GetLineEntry
+// This function will not work when I add support for functions compiled from multiple sections, e.g. inlined functions, injected code, etc.
 int asCScriptFunction::FindNextLineWithCode(int line) const
 {
 	if( scriptData == 0 ) return -1;
@@ -857,7 +861,7 @@ int asCScriptFunction::FindNextLineWithCode(int line) const
 
 		struct C
 		{
-			static int cmp(const void *a, const void *b) { return *(int*)a - *(int*)b; }
+			static int cmp(const void *a, const void *b) { return *(const int*)a - *(const int*)b; }
 		};
 		std::qsort(&lineNbrs[0], lineNbrs.GetLength(), sizeof(int), C::cmp);
 
@@ -887,6 +891,7 @@ int asCScriptFunction::FindNextLineWithCode(int line) const
 
 	return -1;
 }
+#endif
 
 // interface
 int asCScriptFunction::GetLineEntryCount() const
@@ -1964,7 +1969,7 @@ asCScriptFunction* asCScriptFunction::GetCalledFunction(asDWORD programPos)
 	else if (bc == asBC_CallPtr)
 	{
 		asUINT v;
-		int var = asBC_SWORDARG0(&scriptData->byteCode[programPos]);
+		int var = asBC_SWORDARG1(&scriptData->byteCode[programPos]);
 
 		// Find the funcdef from the local variable
 		for (v = 0; v < scriptData->variables.GetLength(); v++)

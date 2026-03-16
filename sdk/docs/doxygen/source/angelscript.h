@@ -1573,7 +1573,7 @@ public:
 	//! \{
 
 	//! \brief Registers an enum type.
-	//! \param[in] type The name of the enum type.
+	//! \param[in] typeName The name of the enum type.
 	//! \param[in] underlyingType The underlying type for the enum.
 	//! \return The type id on success, or a negative value on error.
 	//! \retval asINVALID_NAME \a type is null, not an identifier, or it is a reserved keyword.
@@ -1815,6 +1815,10 @@ public:
 	//! \return The type interface for the type, or null if not found.
 	//!
 	//! This does not increment the reference count of the returned type.
+	//!
+	//! The built-in primitive types do not have a type info, hence this method 
+	//! does not return anything for those type ids. As those type ids are static
+	//! they are easily known by the \ref asETypeIdFlags enum.
 	virtual asITypeInfo   *GetTypeInfoById(int typeId) const = 0;
 	//! \brief Returns the type interface by name.
 	//! \param[in] name The name of the type.
@@ -1824,6 +1828,10 @@ public:
 	//! by \ref SetDefaultNamespace unless the name is prefixed with a scope, using 
 	//! the scoping operator ::. If the scope starts with :: it will be used as the 
 	//! absolute scope, otherwise it will be relative to the default namespace.
+	//!
+	//! The built-in primitive types do not have a type info, hence this method 
+	//! does not return anything for those type ids. In this case it is possible to 
+	//! use \ref GetTypeIdByDecl instead.
 	virtual asITypeInfo   *GetTypeInfoByName(const char *name) const = 0;
 	//! \brief Returns a type by declaration.
 	//! \param[in] decl The declaration of the type.
@@ -1834,6 +1842,10 @@ public:
 	//! calling this function each time. Just remember to update the type info pointer any time the type is 
 	//! changed within the engine, e.g. when recompiling script declared classes, or changing the 
 	//! engine configuration.
+	//!
+	//! The built-in primitive types do not have a type info, hence this method 
+	//! does not return anything for those type ids. In this case it is possible to 
+	//! use \ref GetTypeIdByDecl instead.
 	virtual asITypeInfo   *GetTypeInfoByDecl(const char *decl) const = 0;
 	//! \}
 
@@ -2594,6 +2606,10 @@ public:
 	//! by \ref SetDefaultNamespace unless the name is prefixed with a scope, using 
 	//! the scoping operator ::. If the scope starts with :: it will be used as the 
 	//! absolute scope, otherwise it will be relative to the default namespace.
+	//!
+	//! The built-in primitive types do not have a type info, hence this method 
+	//! does not return anything for those type ids. In this case it is possible to 
+	//! use \ref GetTypeIdByDecl instead.
 	virtual asITypeInfo   *GetTypeInfoByName(const char *name) const = 0;
 	//! \brief Returns a type by declaration.
 	//! \param[in] decl The declaration of the type.
@@ -2604,6 +2620,10 @@ public:
 	//! calling this function each time. Just remember to update the type info pointer any time the type is 
 	//! changed within the engine, e.g. when recompiling script declared classes, or changing the 
 	//! engine configuration.
+	//!
+	//! The built-in primitive types do not have a type info, hence this method 
+	//! does not return anything for those type ids. In this case it is possible to 
+	//! use \ref GetTypeIdByDecl instead.
 	virtual asITypeInfo   *GetTypeInfoByDecl(const char *decl) const = 0;
 	//! \}
 
@@ -4289,10 +4309,14 @@ public:
 	//! \param[in] includeNamespace Set to true if the namespace should be included in the declaration.
 	//! \return The declaration string, or null on error
 	virtual const char      *GetVarDecl(asUINT index, bool includeNamespace = false) const = 0;
+#ifdef AS_DEPRECATED
+	// deprecated since 2025-11-14, 2.39.0
 	//! \brief Returns the next line number with code
 	//! \param[in] line A line number
 	//! \return The number of the next line with code, or a negative value if the line is outside the function.
+	//! \deprecated Since 2.39.0. Use \ref GetLineEntry instead
 	virtual int              FindNextLineWithCode(int line) const = 0;
+#endif
 	//! \brief Returns the location in the script where the function was declared
 	//! \param[out] scriptSection The name of the script section where the function was declared
 	//! \param[out] row The row number where the function was declared
@@ -4319,7 +4343,9 @@ public:
 	//! \retval asINVALID_ARG The index is out of range
 	//! \retval asERROR There is no bytecode
 	//! 
-	//! This function can be used to find all the lines with code in a function.
+	//! This function can be used to find all the lines with code in a function. Observe that the lines may not be sequential,
+	//! or even from the same script section, if the function has been compiled from multiple pieces of code. A common example of
+	//! this is class constructors that contain the initializations of class members as well as additional logic from the constructor body.
 	//! 
 	//! The bytecode pointer can be used to inspect the compiled bytecode at the line.
 	virtual int              GetLineEntry(asUINT index, int* row, int* col, const char** sectionName, const asDWORD** byteCode) const = 0;
