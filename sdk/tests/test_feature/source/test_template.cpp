@@ -287,6 +287,57 @@ bool Test()
 	COutStream out;
 	CBufferedOutStream bout;
 
+	// Test that incorrect signature for template constructor is properly detected
+	// Reported by Patrick Jeeves
+	{
+		asIScriptEngine* engine = asCreateScriptEngine();
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		bout.buffer = "";
+		engine->RegisterObjectType("Test<T>", sizeof(MyValueTmpl), asOBJ_VALUE | asOBJ_TEMPLATE);
+		r = engine->RegisterObjectBehaviour("Test<T>", asBEHAVE_CONSTRUCT, "void f(float)", asFUNCTION(0), asCALL_GENERIC); // missing int& as first param
+		if (r >= 0)
+			TEST_FAILED;
+		engine->ShutDownAndRelease();
+		if (bout.buffer != 
+			" (0, 0) : Error   : First parameter to template factory must be a reference to primitive type. This will be used to pass the object type of the template\n"
+			" (0, 0) : Error   : Failed in call to function 'RegisterObjectBehaviour' with 'Test' and 'void f(float)' (Code: asINVALID_DECLARATION, -10)\n")
+		{
+			PRINTF("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+	}
+
+	// Templated function with value type
+	// https://gamedev.net/forums/topic/719840-templated-function-with-value-type-assert/
+	{
+		asIScriptEngine* engine = asCreateScriptEngine();
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		bout.buffer = "";
+		RegisterStdString(engine);
+		engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
+		engine->RegisterObjectType("Test", 0, asOBJ_REF | asOBJ_NOCOUNT);
+		engine->RegisterObjectMethod("Test", "T @GetScript<class T>()", asFUNCTION(get), asCALL_GENERIC);
+		void *ptr = 0;
+		engine->RegisterGlobalProperty("Test self", &ptr);
+
+		asIScriptModule* mod = engine->GetModule("test", asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("test",
+			"void func() \n"
+			"{ \n"
+			"   auto n = self.GetScript<int>(); \n"
+			"} \n");
+		r = mod->Build();
+		if (r >= 0)
+			TEST_FAILED;
+		engine->ShutDownAndRelease();
+		if (bout.buffer != "test (1, 1) : Info    : Compiling void func()\n"
+						   "test (3, 28) : Error   : Attempting to instantiate invalid template 'GetScript<int>'\n")
+		{
+			PRINTF("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+	}
+
 	// Test template specialization
 	// https://www.gamedev.net/forums/topic/712952-strange-behavior-when-registering-method-with-template-specialization-types/5450698/
 	{
@@ -883,7 +934,7 @@ bool Test()
 		if (r >= 0)
 			TEST_FAILED;
 
-		if (bout.buffer != "Property (1, 10) : Error   : Attempting to instantiate invalid template type 'Template<int>'\n"
+		if (bout.buffer != "Property (1, 10) : Error   : Attempting to instantiate invalid template 'Template<int>'\n"
 						   " (0, 0) : Error   : Failed in call to function 'RegisterGlobalProperty' with 'Template<int> t' (Code: asINVALID_DECLARATION, -10)\n")
 		{
 			PRINTF("%s", bout.buffer.c_str());
@@ -1067,7 +1118,7 @@ bool Test()
 		engine->RegisterObjectBehaviour("Tmpl1<T>", asBEHAVE_FACTORY, "Tmpl1<T> @f()", asFUNCTION(0), asCALL_GENERIC);
 		engine->RegisterObjectBehaviour("Tmpl1<T>", asBEHAVE_FACTORY, "Tmpl1<T> @f(int &in, Tmpl1<T> @+)", asFUNCTION(0), asCALL_GENERIC);
 
-		if( bout.buffer != " (0, 0) : Error   : First parameter to template factory must be a reference. This will be used to pass the object type of the template\n"
+		if( bout.buffer != " (0, 0) : Error   : First parameter to template factory must be a reference to primitive type. This will be used to pass the object type of the template\n"
 						   " (0, 0) : Error   : Failed in call to function 'RegisterObjectBehaviour' with 'Tmpl1' and 'Tmpl1<T> @f()' (Code: asINVALID_DECLARATION, -10)\n" )
 		{
 			PRINTF("%s", bout.buffer.c_str());
@@ -1573,7 +1624,7 @@ bool Test()
 			TEST_FAILED;
 		}
 
-		if( bout.buffer != "ExecuteString (1, 8) : Error   : Attempting to instantiate invalid template type 'MyTmpl<int>'\n" )
+		if( bout.buffer != "ExecuteString (1, 8) : Error   : Attempting to instantiate invalid template 'MyTmpl<int>'\n" )
 		{
 			PRINTF("%s", bout.buffer.c_str());
 			TEST_FAILED;

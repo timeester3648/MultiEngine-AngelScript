@@ -13,6 +13,90 @@ bool Test()
 	COutStream out;
 	CBufferedOutStream bout;
 
+	// Test namespace where a nested namespace has the same name as a global namespace
+	// Reported by Anton Brandstoetter
+	{
+		engine = asCreateScriptEngine();
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		bout.buffer = "";
+		engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
+		asIScriptModule* mod = engine->GetModule("test", asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("test",
+			R"(
+			namespace intern 
+			{
+				int hide = 1;
+				class MyType
+				{
+				}
+			}
+			namespace NS1 
+			{
+				namespace intern 
+				{
+					// intern:: refers to NS1::intern in this context, not ::intern, so this should fail
+					int local = intern::hide;
+					void func() { intern::MyType@ _MyType; }
+
+					// explicitly refer to the global intern namespace, so this should work
+					int local2 = ::intern::hide;
+					void func2() { ::intern::MyType@ _MyType2; }
+				}
+				int local3 = intern::local2;  // intern:: refers to NS1::intern, so this should work
+			})");
+		r = mod->Build();
+		if (r >= 0)
+			TEST_FAILED;
+		engine->ShutDownAndRelease();
+		if (bout.buffer != "test (14, 10) : Info    : Compiling int local\n"
+						   "test (14, 18) : Error   : No matching symbol 'intern::hide'\n"
+						   "test (15, 6) : Info    : Compiling void func()\n"
+						   "test (15, 28) : Error   : Identifier 'MyType' is not a data type in namespace 'NS1::intern' or parent\n")
+		{
+			PRINTF("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+	}
+
+	// Test namespace resolution for enums in double namespace
+	// https://github.com/anjo76/angelscript/issues/67
+	{
+		engine = asCreateScriptEngine();
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		bout.buffer = "";
+
+		engine->SetDefaultNamespace("CometEditor::GUI");
+
+		engine->RegisterEnum("TestEnum");
+		engine->RegisterEnumValue("TestEnum", "Test1", 1);
+		engine->RegisterEnumValue("TestEnum", "Test2", 2);
+
+		asIScriptModule* mod = engine->GetModule("test", asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("test",
+			"using namespace CometEditor;\n"
+			"void func(GUI::TestEnum t) {}\n"
+			"class MyClass\n"
+			"{\n"
+			"  GUI::TestEnum t;\n"
+			"}\n"
+			"void main()\n"
+			"{\n"
+			"  GUI::TestEnum t;\n"
+			"  func(GUI::TestEnum::Test1);\n"
+			"}\n");
+		r = mod->Build();
+		if (r < 0)
+			TEST_FAILED;
+
+		engine->ShutDownAndRelease();
+
+		if (bout.buffer != "")
+		{
+			PRINTF("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+	}
+
 	// Test default namespace in opCast
 	// https://www.gamedev.net/forums/topic/719264-default-namespaces-in-opcast/5472016/
 	{
