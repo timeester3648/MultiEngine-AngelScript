@@ -87,7 +87,9 @@ asCBuilder::asCBuilder(asCScriptEngine *_engine, asCModule *_module)
 	silent = false;
 	numWarnings = 0;
 	numErrors = 0;
+#ifndef AS_NO_COMPILER
 	hasCachedKnownTypes = false;
+#endif
 }
 
 asCBuilder::~asCBuilder()
@@ -5582,6 +5584,9 @@ int asCBuilder::RegisterScriptFunction(asCScriptNode *node, asCScriptCode *file,
 		for( asUINT n = 0; n < funcs.GetLength(); ++n )
 		{
 			asCScriptFunction *func = GetFunctionDescription(funcs[n]);
+			// Ignore the default built-in script class constructor
+			if( func->id == engine->scriptTypeBehaviours.beh.constructors[0] )
+				continue;
 			if( func->IsSignatureExceptNameAndReturnTypeEqual(parameterTypes, inOutFlags, objType, funcTraits.GetTrait(asTRAIT_CONST), funcTraits.GetTrait(asTRAIT_VARIADIC)) )
 			{
 				if( isMixin )
@@ -6399,7 +6404,7 @@ asSNameSpace *asCBuilder::GetNameSpaceByString(const asCString &nsName, asSNameS
 
 					asSNameSpace *nsTmp = searchNs == "::" ? engine->nameSpaces[0] : engine->FindNameSpace(searchNs.AddressOf());
 					asCTypeInfo *ti = 0;
-					while( !ti && nsTmp )
+					if( nsTmp )
 					{
 						// Check if the typeName is an existing type in the namespace
 						ti = GetType(typeName.AddressOf(), nsTmp, 0);
@@ -6409,7 +6414,6 @@ asSNameSpace *asCBuilder::GetNameSpaceByString(const asCString &nsName, asSNameS
 							*scopeType = ti;
 							return 0;
 						}
-						nsTmp = recursive ? engine->GetParentNameSpace(nsTmp) : 0;
 					}
 				}
 			}
